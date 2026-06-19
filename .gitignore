@@ -1,0 +1,4 @@
+/backend/vendor/
+/uploads/
+.env
+*.log
