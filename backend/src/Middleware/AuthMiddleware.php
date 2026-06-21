@@ -6,6 +6,7 @@ namespace App\Middleware;
 
 use App\Core\Request;
 use App\Core\Response;
+use App\Core\Jwt;
 
 class AuthMiddleware
 {
@@ -18,7 +19,16 @@ class AuthMiddleware
             exit;
         }
 
-        // TODO (prochaine étape) : remplacer par Jwt::verify($token)
-        $request->setContext('user', ['id' => 1, 'role' => 'user']); // stub temporaire
+        try {
+            $payload = Jwt::decode($token);
+        } catch (\RuntimeException $e) {
+            Response::error('Invalid or expired token', 401);
+            exit;
+        }
+
+        $request->setContext('user', [
+            'id'   => (int) $payload['sub'],
+            'role' => $payload['role'],
+        ]);
     }
 }
