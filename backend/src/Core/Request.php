@@ -14,7 +14,8 @@ class Request
         private string $path,
         private array $query,
         private array $body,
-        private array $headers
+        private array $headers,
+        private array $files = []
     ) {}
 
     public static function fromGlobals(): self
@@ -26,7 +27,8 @@ class Request
 
         $rawBody = file_get_contents('php://input') ?: '';
         $decoded = json_decode($rawBody, true);
-        $body    = is_array($decoded) ? $decoded : [];
+        // Si ce n'est pas du JSON (ex: multipart/form-data), on retombe sur $_POST
+        $body    = is_array($decoded) ? $decoded : $_POST;
 
         $headers = [];
         foreach ($_SERVER as $key => $value) {
@@ -38,7 +40,7 @@ class Request
             $headers['CONTENT-TYPE'] = $_SERVER['CONTENT_TYPE'];
         }
 
-        return new self($method, $path, $_GET, $body, $headers);
+        return new self($method, $path, $_GET, $body, $headers, $_FILES);
     }
 
     public function method(): string { return $this->method; }
@@ -62,6 +64,11 @@ class Request
         return $this->query[$key] ?? $default;
     }
 
+    public function file(string $key): ?array
+    {
+        return $this->files[$key] ?? null;
+    }
+
     public function header(string $name): ?string
     {
         return $this->headers[strtoupper($name)] ?? null;
@@ -76,7 +83,6 @@ class Request
         return null;
     }
 
-    // Utilisé par les middlewares pour transmettre des données au contrôleur
     public function setContext(string $key, mixed $value): void { $this->context[$key] = $value; }
     public function context(string $key, mixed $default = null): mixed { return $this->context[$key] ?? $default; }
 }
