@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Historique · File Converter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      fontFamily: { sans: ['Geist','system-ui','sans-serif'], mono: ['Geist Mono','monospace'] },
+      colors: { ink: '#08080b', surface: '#101014', elevated: '#16161c' },
+    } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body class="min-h-screen">
+  <div id="navbar"></div>
+
+  <main class="max-w-5xl mx-auto px-5 pt-8 pb-24">
+    <!-- Header -->
+    <div class="flex items-end justify-between gap-4 mb-6 animate-fade-up flex-wrap">
+      <div>
+        <span class="font-mono text-[11px] tracking-widest uppercase text-[#7a7a86]">Historique</span>
+        <h1 class="text-[28px] font-semibold tracking-tight mt-1">Vos conversions</h1>
+      </div>
+      <a href="index.html" class="btn-primary rounded-xl px-4 py-2.5 text-sm font-semibold flex items-center gap-2">
+        <svg viewBox="0 0 18 18" class="w-4 h-4" fill="none"><path d="M9 4v10M4 9h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        Nouvelle conversion
+      </a>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card p-3.5 mb-4 animate-fade-up flex flex-wrap items-center gap-2.5" style="animation-delay:.05s">
+      <div class="flex items-center gap-2">
+        <label class="text-[12px] text-[#7a7a86] font-medium pl-1">De</label>
+        <select id="filter-from" class="field rounded-lg px-3 py-1.5 text-[13px] font-mono">
+          <option value="">Tous</option>
+          <option value="csv">csv</option><option value="json">json</option>
+          <option value="xml">xml</option><option value="xlsx">xlsx</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-[12px] text-[#7a7a86] font-medium pl-1">Vers</label>
+        <select id="filter-to" class="field rounded-lg px-3 py-1.5 text-[13px] font-mono">
+          <option value="">Tous</option>
+          <option value="csv">csv</option><option value="json">json</option><option value="xml">xml</option>
+        </select>
+      </div>
+      <div class="flex-1"></div>
+      <div class="flex items-center gap-2">
+        <label class="text-[12px] text-[#7a7a86] font-medium pl-1">Trier</label>
+        <select id="sort-by" class="field rounded-lg px-3 py-1.5 text-[13px]">
+          <option value="created_at">Date</option>
+          <option value="file_size">Taille</option>
+          <option value="file_name">Nom</option>
+        </select>
+        <button id="order-toggle" class="btn-ghost rounded-lg px-2.5 py-1.5 text-[13px] flex items-center gap-1.5" data-order="desc" title="Inverser l'ordre">
+          <svg id="order-icon" viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="none"><path d="M8 3v10m0 0L4.5 9.5M8 13l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="order-label" class="font-mono text-[11px]">desc</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Liste -->
+    <div id="list" class="card overflow-hidden animate-fade-up" style="animation-delay:.1s"></div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>
