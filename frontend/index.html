@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convertir · File Converter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      fontFamily: { sans: ['Geist','system-ui','sans-serif'], mono: ['Geist Mono','monospace'] },
+      colors: { ink: '#08080b', surface: '#101014', elevated: '#16161c' },
+    } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body class="min-h-screen">
+  <div id="navbar"></div>
+
+  <main class="max-w-3xl mx-auto px-5 pt-8 pb-24">
+    <!-- Header -->
+    <div class="mb-7 animate-fade-up">
+      <span class="font-mono text-[11px] tracking-widest uppercase text-[#7a7a86]">Convertir</span>
+      <h1 class="text-[28px] font-semibold tracking-tight mt-1">Transformez vos fichiers</h1>
+      <p class="text-[#8a8a96] text-sm mt-1.5">Déposez un fichier, choisissez le format de sortie, c'est prêt.</p>
+    </div>
+
+    <div class="card p-6 sm:p-8 shadow-2xl animate-fade-up" style="animation-delay:.06s">
+      <!-- Dropzone -->
+      <div id="dropzone"
+        class="dropzone relative rounded-2xl border border-dashed border-[var(--line-2)] bg-white/[0.015] px-6 py-12 text-center cursor-pointer transition-colors">
+        <input id="file-input" type="file" class="hidden" />
+        <div id="dz-empty">
+          <div class="mx-auto w-14 h-14 grid place-items-center rounded-2xl bg-white/[0.04] ring-1 ring-[var(--line)] mb-4">
+            <svg viewBox="0 0 24 24" class="w-6 h-6 text-[#9a9aa6]" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <p class="text-[15px] font-medium text-[#e2e2e9]">Glissez-déposez votre fichier ici</p>
+          <p class="text-sm text-[#7a7a86] mt-1">ou <span class="text-violet-300 font-medium">parcourez</span> vos fichiers</p>
+          <p class="font-mono text-[11px] text-[#5c5c66] mt-4">CSV · JSON · XML · XLSX · TXT — jusqu'à 50 Mo</p>
+        </div>
+        <!-- Selected file -->
+        <div id="dz-file" class="hidden">
+          <div class="flex items-center gap-3.5 max-w-md mx-auto text-left">
+            <div id="file-icon" class="shrink-0 w-12 h-12 grid place-items-center rounded-xl bg-grad text-white font-mono text-[11px] font-semibold uppercase">?</div>
+            <div class="min-w-0 flex-1">
+              <div id="file-name" class="text-sm font-medium text-[#e7e7ee] truncate">—</div>
+              <div id="file-meta" class="text-[12px] text-[#7a7a86] mt-0.5">—</div>
+            </div>
+            <button id="file-remove" class="shrink-0 text-[#5c5c66] hover:text-rose-300 transition-colors p-1.5 rounded-lg hover:bg-white/5" aria-label="Retirer">
+              <svg viewBox="0 0 18 18" class="w-4 h-4" fill="none"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Format de sortie -->
+      <div class="mt-7">
+        <label class="block text-[13px] font-medium text-[#c7c7d0] mb-2.5">Format de sortie</label>
+        <div id="format-seg" class="grid grid-cols-3 gap-2">
+          <!-- segments injectés -->
+        </div>
+      </div>
+
+      <!-- Action -->
+      <button id="convert-btn" disabled
+        class="btn-primary w-full rounded-xl py-3 text-sm font-semibold flex items-center justify-center gap-2 mt-7">
+        <span class="btn-label">Convertir le fichier</span>
+        <span class="btn-spin spinner w-4 h-4 hidden"></span>
+      </button>
+    </div>
+
+    <!-- Résultat -->
+    <div id="result" class="hidden mt-5"></div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/convert.js"></script>
+</body>
+</html>

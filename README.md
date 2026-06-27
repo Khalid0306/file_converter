@@ -67,6 +67,19 @@ curl -X POST http://localhost/api/conversions \
   -F "to_format=json"
 ```
 
+## Frontend
+
+| Page | Description |
+|---|---|
+| Login | Connexion avec email/mot de passe, redirection auto si déjà connecté |
+| Convertisseur | Upload drag-and-drop, choix du format cible, aperçu/téléchargement du résultat |
+| Historique | Liste des conversions passées avec filtres (format source/cible) et tri |
+| Profil | Infos utilisateur et statistiques d'activité |
+| Paramètres | Thème (dark/light/auto), couleur d'accent, format par défaut, préférences d'affichage |
+| Admin | Dashboard d'administration (non fonctionnel côté backend, voir Limites) |
+
+Les préférences utilisateur (thème, accent, etc.) sont stockées dans le `localStorage` du navigateur.
+
 ## Formats supportés
 
 CSV ↔ JSON ↔ XML — 6 sens de conversion. Les données doivent être tabulaires (liste d'enregistrements à plat).
@@ -98,7 +111,7 @@ file-converter/
 
 │   └── tests/                  # PHPUnit
 
-├── frontend/
+├── frontend/                   # SPA (HTML, JS, CSS, Tailwind)
 
 ├── scripts/test_api.sh         # tests API automatisés
 
@@ -117,6 +130,44 @@ docker compose run --rm app vendor/bin/phpunit
 ```bash
 ./scripts/test_api.sh
 ```
+
+## Endpoints API
+
+### Publics
+
+| Méthode | Route | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Inscription (name, email, password) |
+| POST | `/api/auth/login` | Connexion → retourne un JWT |
+
+### Authentifiés (header `Authorization: Bearer <token>`)
+
+| Méthode | Route | Description |
+|---|---|---|
+| DELETE | `/api/auth/logout` | Déconnexion (stateless, supprime le token côté client) |
+| POST | `/api/conversions` | Upload et conversion d'un fichier |
+| GET | `/api/conversions` | Historique des conversions de l'utilisateur |
+| GET | `/api/conversions/{id}/download` | Télécharger le fichier converti |
+| DELETE | `/api/conversions/{id}` | Supprimer une conversion |
+
+### Admin uniquement
+
+| Méthode | Route | Statut |
+|---|---|---|
+| GET | `/api/admin/users` | 501 — non implémenté |
+| PUT | `/api/admin/users/{id}` | 501 — non implémenté |
+| DELETE | `/api/admin/users/{id}` | 501 — non implémenté |
+| GET | `/api/admin/conversions` | 501 — non implémenté |
+| GET | `/api/admin/stats` | 501 — non implémenté |
+
+## Limites connues
+
+- Les endpoints admin renvoient tous **501 Not Implemented** (le frontend affiche des données de démo en fallback)
+- Le logout est **stateless** : le serveur n'invalide pas le token, seul le frontend le supprime
+- Pas de mécanisme de **refresh token** (le JWT expire après 24h)
+- Pas de **réinitialisation de mot de passe** ni de vérification d'email
+- Les fichiers uploadés ne sont **pas nettoyés automatiquement** (pas de TTL/cron)
+- Le `DEMO_MODE` est activé dans le frontend : si l'API est injoignable, des données fictives sont affichées
 
 ## Commandes utiles
 

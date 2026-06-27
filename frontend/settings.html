@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Réglages · File Converter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      fontFamily: { sans: ['Geist','system-ui','sans-serif'], mono: ['Geist Mono','monospace'] },
+      colors: { ink: '#08080b', surface: '#101014', elevated: '#16161c' },
+    } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body class="min-h-screen">
+  <div id="navbar"></div>
+
+  <main class="max-w-2xl mx-auto px-5 pt-8 pb-24">
+    <!-- Header -->
+    <div class="mb-7 animate-fade-up">
+      <span class="font-mono text-[11px] tracking-widest uppercase text-[#7a7a86]">Préférences</span>
+      <h1 class="text-[28px] font-semibold tracking-tight mt-1">Réglages</h1>
+      <p class="text-[#8a8a96] text-sm mt-1.5">Personnalisez le comportement de l'application. Tout est enregistré automatiquement.</p>
+    </div>
+
+    <div id="settings" class="space-y-3.5"></div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin · File Converter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      fontFamily: { sans: ['Geist','system-ui','sans-serif'], mono: ['Geist Mono','monospace'] },
+      colors: { ink: '#08080b', surface: '#101014', elevated: '#16161c' },
+    } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body class="min-h-screen">
+  <div id="navbar"></div>
+
+  <main class="max-w-6xl mx-auto px-5 pt-8 pb-24">
+    <!-- Header -->
+    <div class="mb-7 animate-fade-up flex items-center gap-3">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="font-mono text-[11px] tracking-widest uppercase text-[#7a7a86]">Administration</span>
+          <span class="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ring-1 ring-violet-400/30 text-violet-300 bg-violet-400/10">Admin</span>
+        </div>
+        <h1 class="text-[28px] font-semibold tracking-tight mt-1">Tableau de bord</h1>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <section class="mb-9 animate-fade-up" style="animation-delay:.05s">
+      <div class="flex items-center justify-between mb-3.5">
+        <h2 class="text-[15px] font-semibold text-[#e2e2e9]">Statistiques</h2>
+        <span class="text-[11px] font-mono text-amber-300/80 px-2 py-0.5 rounded ring-1 ring-amber-400/20 bg-amber-400/5">Endpoint à venir</span>
+      </div>
+      <div id="stats-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
+    </section>
+
+    <!-- USERS -->
+    <section class="mb-9 animate-fade-up" style="animation-delay:.1s">
+      <div class="flex items-center justify-between mb-3.5">
+        <div class="flex items-center gap-2.5">
+          <h2 class="text-[15px] font-semibold text-[#e2e2e9]">Utilisateurs</h2>
+          <span class="text-[11px] font-mono text-amber-300/80 px-2 py-0.5 rounded ring-1 ring-amber-400/20 bg-amber-400/5">Endpoint à venir</span>
+        </div>
+      </div>
+      <div id="users-table" class="card overflow-hidden"></div>
+    </section>
+
+    <!-- ALL CONVERSIONS -->
+    <section class="animate-fade-up" style="animation-delay:.15s">
+      <div class="flex items-center justify-between mb-3.5">
+        <h2 class="text-[15px] font-semibold text-[#e2e2e9]">Toutes les conversions</h2>
+      </div>
+      <div id="conv-table" class="card overflow-hidden"></div>
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/toast.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
