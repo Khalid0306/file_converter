@@ -261,7 +261,58 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════════════
-section "9. Routes admin (contrôle de rôle)"
+section "9. Partage public (lien temporaire)"
+# ══════════════════════════════════════════════════════════════════════════
+
+# On crée une conversion dédiée pour ne pas dépendre de l'état des sections précédentes
+RESP=$(http_upload /api/conversions "$USER_TOKEN" "$CSV_FILE" "json")
+SHARE_TEST_ID=$(body_of "$RESP" | jq -r '.conversion.id // empty')
+
+if [ -n "$SHARE_TEST_ID" ]; then
+    RESP=$(http_json POST "/api/conversions/${SHARE_TEST_ID}/share" "$USER_TOKEN")
+    STATUS=$(status_of "$RESP")
+    BODY=$(body_of "$RESP")
+    assert_status "Génération d'un lien de partage" "201" "$STATUS"
+    SHARE_TOKEN=$(echo "$BODY" | jq -r '.share_token // empty')
+
+    if [ -n "$SHARE_TOKEN" ]; then
+        HTTP_CODE=$(curl -s -o "$TMP_DIR/shared_download" -w '%{http_code}' \
+            "${BASE_URL}/api/share/${SHARE_TOKEN}")
+        assert_status "Téléchargement via lien public (sans token JWT)" "200" "$HTTP_CODE"
+
+        RESP=$(http_json GET "/api/share/inexistant_xyz" "")
+        assert_status "Lien de partage invalide → 404" "404" "$(status_of "$RESP")"
+
+        # Alice ne peut pas partager une conversion qui n'est pas la sienne
+        RESP=$(http_json POST "/api/conversions/${SHARE_TEST_ID}/share" "$ALICE_TOKEN")
+        assert_status "Partage d'une conversion d'un autre user → 404" "404" "$(status_of "$RESP")"
+
+        RESP=$(http_json DELETE "/api/conversions/${SHARE_TEST_ID}/share" "$USER_TOKEN")
+        assert_status "Révocation du lien de partage" "200" "$(status_of "$RESP")"
+
+        RESP=$(http_json GET "/api/share/${SHARE_TOKEN}" "")
+        assert_status "Lien révoqué → 404" "404" "$(status_of "$RESP")"
+    else
+        echo -e "  ${YELLOW}⚠ Pas de token de partage retourné, étapes suivantes ignorées${NC}"
+    fi
+else
+    echo -e "  ${YELLOW}⚠ Impossible de créer une conversion pour ce test, section ignorée${NC}"
+fi
+
+# Cas réel qui a planté en prod : une conversion seedée (sans fichier réel, path_out = NULL)
+# ne doit jamais pouvoir être partagée -- sinon le téléchargement public crashe en 500.
+RESP=$(http_json GET "/api/conversions?sort=created_at&order=asc" "$ALICE_TOKEN")
+SEEDED_ID=$(body_of "$RESP" | jq -r '.conversions[0].id // empty')
+
+if [ -n "$SEEDED_ID" ]; then
+    RESP=$(http_json POST "/api/conversions/${SEEDED_ID}/share" "$ALICE_TOKEN")
+    assert_status "Partage d'une conversion seedée sans fichier réel → 404 (pas 500)" "404" "$(status_of "$RESP")"
+else
+    echo -e "  ${YELLOW}⚠ Aucune conversion seedée trouvée pour Alice, étape ignorée${NC}"
+fi
+
+# ══════════════════════════════════════════════════════════════════════════
+section "10. Routes admin (contrôle de rôle)"
 # ══════════════════════════════════════════════════════════════════════════
 
 if [ -n "$ADMIN_TOKEN" ]; then
@@ -292,7 +343,7 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════════════
-section "10. Logout"
+section "11. Logout"
 # ══════════════════════════════════════════════════════════════════════════
 
 RESP=$(http_json DELETE /api/auth/logout "$USER_TOKEN")

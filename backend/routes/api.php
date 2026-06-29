@@ -26,3 +26,8 @@ $router->put('/api/admin/users/{id}',    [AdminController::class, 'updateUser'],
 $router->delete('/api/admin/users/{id}', [AdminController::class, 'deleteUser'],  [AuthMiddleware::class, AdminMiddleware::class]);
 $router->get('/api/admin/conversions',   [AdminController::class, 'conversions'], [AuthMiddleware::class, AdminMiddleware::class]);
 $router->get('/api/admin/stats',         [AdminController::class, 'stats'],       [AuthMiddleware::class, AdminMiddleware::class]);
+
+// ── Partage public ──
+$router->post('/api/conversions/{id}/share',     [ConversionController::class, 'share'],   [AuthMiddleware::class]);
+$router->delete('/api/conversions/{id}/share',   [ConversionController::class, 'unshare'], [AuthMiddleware::class]);
+$router->get('/api/share/{token}',               [ConversionController::class, 'publicDownload']); // public, sans middleware
