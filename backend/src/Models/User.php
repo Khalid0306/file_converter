@@ -8,6 +8,15 @@ use App\Core\Database;
 
 class User
 {
+    public static function all(): array
+    {
+        $stmt = Database::connection()->query(
+            'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC, id DESC'
+        );
+
+        return $stmt->fetchAll();
+    }
+
     public static function findByEmail(string $email): ?array
     {
         $stmt = Database::connection()->prepare(
@@ -48,5 +57,33 @@ class User
         $stmt = Database::connection()->prepare('SELECT 1 FROM users WHERE email = :email');
         $stmt->execute(['email' => $email]);
         return (bool) $stmt->fetchColumn();
+    }
+
+    public static function update(int $id, array $data): ?array
+    {
+        $stmt = Database::connection()->prepare(
+            'UPDATE users
+             SET name = :name,
+                 email = :email,
+                 role = :role
+             WHERE id = :id
+             RETURNING id, name, email, role, created_at'
+        );
+        $stmt->execute([
+            'id' => $id,
+            'name' => trim((string) ($data['name'] ?? '')),
+            'email' => trim((string) ($data['email'] ?? '')),
+            'role' => in_array(($data['role'] ?? 'user'), ['admin', 'user'], true) ? $data['role'] : 'user',
+        ]);
+
+        $user = $stmt->fetch();
+        return $user ?: null;
+    }
+
+    public static function delete(int $id): bool
+    {
+        $stmt = Database::connection()->prepare('DELETE FROM users WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+        return $stmt->rowCount() > 0;
     }
 }
