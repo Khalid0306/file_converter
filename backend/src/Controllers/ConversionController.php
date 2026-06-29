@@ -123,7 +123,7 @@ class ConversionController
             return;
         }
 
-        if (!file_exists($conversion['path_out'])) {
+        if (empty($conversion['path_out']) || !file_exists($conversion['path_out'])) {
             Response::error('Converted file is missing on disk', 410);
             return;
         }
@@ -156,5 +156,64 @@ class ConversionController
         }
 
         Response::json(['message' => 'Conversion deleted']);
+    }
+
+    // ── Partage public ──────────────────────────────────────────────────
+
+    private const SHARE_TTL = 86400; // 24h
+
+    public function share(Request $request): void
+    {
+        $user = $request->context('user');
+        $id   = (int) $request->param('id');
+
+        $result = Conversion::createShareLink($id, $user['id'], self::SHARE_TTL);
+
+        if (!$result) {
+            Response::error('Conversion not found or not ready to share', 404);
+            return;
+        }
+
+        Response::json([
+            'share_token' => $result['share_token'],
+            'share_url'   => '/api/share/' . $result['share_token'],
+            'expires_at'  => $result['share_expires_at'],
+        ], 201);
+    }
+
+    public function unshare(Request $request): void
+    {
+        $user = $request->context('user');
+        $id   = (int) $request->param('id');
+
+        if (!Conversion::revokeShareLink($id, $user['id'])) {
+            Response::error('Conversion not found', 404);
+            return;
+        }
+
+        Response::json(['message' => 'Share link revoked']);
+    }
+
+    // Route publique — pas de middleware Auth. N'importe qui avec le token peut télécharger.
+    public function publicDownload(Request $request): void
+    {
+        $token      = (string) $request->param('token');
+        $conversion = Conversion::findByShareToken($token);
+
+        if (!$conversion || !Conversion::isShareValid($conversion['share_token'], $conversion['share_expires_at'])) {
+            Response::error('Link not found or expired', 404);
+            return;
+        }
+
+        if (empty($conversion['path_out']) || !file_exists($conversion['path_out'])) {
+            Response::error('File is missing on disk', 410);
+            return;
+        }
+
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . $conversion['file_name'] . '"');
+        header('Content-Length: ' . filesize($conversion['path_out']));
+        readfile($conversion['path_out']);
+        exit;
     }
 }

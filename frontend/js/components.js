@@ -309,3 +309,53 @@ async function downloadConversion(id, filename) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
+
+/* ---------- Partage public (lien temporaire) ---------- */
+async function openShareModal(id, filename) {
+  let shareUrl, expiresAt;
+  try {
+    const res = await api(`/api/conversions/${id}/share`, { method: 'POST' });
+    shareUrl = location.origin + res.share_url;
+    expiresAt = res.expires_at;
+  } catch (err) {
+    toast.error(err.message || 'Impossible de générer le lien.');
+    return;
+  }
+
+  const body = `
+    <p class="text-sm text-[#9a9aa6] leading-relaxed">
+      « ${escapeHtml(filename)} » est accessible via ce lien, sans connexion, jusqu'au
+      <strong class="text-[#c7c7d0]">${escapeHtml(formatDateFull(expiresAt))}</strong>.
+    </p>
+    <div class="mt-3.5 flex items-center gap-2">
+      <input id="share-link-input" type="text" readonly value="${escapeHtml(shareUrl)}"
+        class="field flex-1 rounded-xl px-3.5 py-2.5 text-[13px] font-mono" />
+      <button id="share-copy-btn" class="btn-ghost shrink-0 rounded-xl px-3.5 py-2.5 text-sm font-medium">Copier</button>
+    </div>
+    <button id="share-revoke-btn" class="text-[13px] text-rose-300 hover:text-rose-200 mt-3.5">
+      Révoquer ce lien
+    </button>`;
+
+  openModal({
+    title: 'Lien de partage',
+    body,
+    confirmLabel: 'Fermer',
+    onConfirm: () => {},
+  });
+
+  document.getElementById('share-copy-btn').addEventListener('click', async () => {
+    await navigator.clipboard.writeText(shareUrl);
+    toast.success('Lien copié.');
+  });
+
+  document.getElementById('share-revoke-btn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+      await api(`/api/conversions/${id}/share`, { method: 'DELETE' });
+      toast.success('Lien révoqué.');
+      document.querySelector('[data-close]')?.click();
+    } catch (err) {
+      toast.error(err.message || 'Impossible de révoquer le lien.');
+    }
+  });
+}

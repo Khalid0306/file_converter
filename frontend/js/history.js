@@ -64,7 +64,7 @@
     if (!items.length) { emptyState(); return; }
     list.innerHTML = `
       <div class="hidden sm:grid grid-cols-[1fr_auto_auto_auto] gap-4 px-5 py-3 border-b border-[var(--line)] text-[11px] font-medium uppercase tracking-wide text-[#6a6a76]">
-        <span>Fichier</span><span class="w-24 text-right">Taille</span><span class="w-32">Date</span><span class="w-20 text-right">Actions</span>
+        <span>Fichier</span><span class="w-24 text-right">Taille</span><span class="w-32">Date</span><span class="w-28 text-right">Actions</span>
       </div>
       <div class="divide-y divide-[var(--line)] stagger">
         ${items.map(rowHtml).join('')}
@@ -90,7 +90,10 @@
       </div>
       <div class="hidden sm:block w-24 text-right text-[13px] text-[#9a9aa6] font-mono">${formatBytes(c.file_size)}</div>
       <div class="hidden sm:block w-32 text-[13px] text-[#9a9aa6]" title="${escapeHtml(formatDateFull(c.created_at))}">${formatDate(c.created_at)}</div>
-      <div class="w-20 flex items-center justify-end gap-1">
+      <div class="w-28 flex items-center justify-end gap-1">
+        <button data-act="share" class="p-2 rounded-lg text-[#9a9aa6] hover:text-violet-300 hover:bg-white/5 transition-colors" title="Partager">
+          <svg viewBox="0 0 18 18" class="w-4 h-4" fill="none"><path d="M13 6.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM5 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6.5-3.2L6.7 5.4m0 7.2 4.8-2.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
         <button data-act="download" class="p-2 rounded-lg text-[#9a9aa6] hover:text-violet-300 hover:bg-white/5 transition-colors" title="Télécharger">
           <svg viewBox="0 0 18 18" class="w-4 h-4" fill="none"><path d="M9 3v8m0 0L5.5 7.5M9 11l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 13.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         </button>
@@ -105,6 +108,7 @@
     list.querySelectorAll('[data-id]').forEach(row => {
       const id = +row.dataset.id;
       const conv = items.find(c => c.id === id);
+      row.querySelector('[data-act="share"]').addEventListener('click', () => openShareModal(id, conv.file_name));
       row.querySelector('[data-act="download"]').addEventListener('click', async (e) => {
         const btn = e.currentTarget; btn.innerHTML = '<span class="spinner w-4 h-4 block"></span>';
         try { await downloadConversion(id, conv.file_name); toast.success('Téléchargement lancé.'); }

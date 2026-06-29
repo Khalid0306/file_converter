@@ -177,4 +177,67 @@ class Conversion
         $stmt->execute(['id' => $id]);
         return $stmt->rowCount() > 0;
     }
+
+    // ── Partage public ──────────────────────────────────────────────────
+
+    /**
+     * Logique pure (pas de DB) : un lien est valide s'il existe ET n'est pas expiré.
+     * Séparée du reste pour rester testable unitairement sans dépendre de PostgreSQL.
+     */
+    public static function isShareValid(?string $token, ?string $expiresAt): bool
+    {
+        if ($token === null || $expiresAt === null) {
+            return false;
+        }
+
+        return strtotime($expiresAt) > time();
+    }
+
+    public static function createShareLink(int $id, int $userId, int $ttlSeconds): ?array
+    {
+        $conversion = self::findByIdForUser($id, $userId);
+
+        if (!$conversion || $conversion['status'] !== 'completed' || empty($conversion['path_out'])) {
+            return null;
+        }
+
+        $token     = bin2hex(random_bytes(24));
+        $expiresAt = (new \DateTime())->modify("+{$ttlSeconds} seconds")->format('Y-m-d H:i:s');
+
+        $stmt = Database::connection()->prepare(
+            'UPDATE conversions
+             SET share_token = :token, share_expires_at = :expires
+             WHERE id = :id AND user_id = :user_id
+             RETURNING id, share_token, share_expires_at'
+        );
+        $stmt->execute([
+            'token'   => $token,
+            'expires' => $expiresAt,
+            'id'      => $id,
+            'user_id' => $userId,
+        ]);
+
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function revokeShareLink(int $id, int $userId): bool
+    {
+        $stmt = Database::connection()->prepare(
+            'UPDATE conversions
+             SET share_token = NULL, share_expires_at = NULL
+             WHERE id = :id AND user_id = :user_id'
+        );
+        $stmt->execute(['id' => $id, 'user_id' => $userId]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public static function findByShareToken(string $token): ?array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM conversions WHERE share_token = :token'
+        );
+        $stmt->execute(['token' => $token]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
 }

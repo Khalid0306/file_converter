@@ -19,5 +19,7 @@ CREATE TABLE conversions (
     status       VARCHAR(20) DEFAULT 'pending',
     path_in      TEXT,
     path_out     TEXT,
+    share_token      VARCHAR(64) UNIQUE,
+    share_expires_at TIMESTAMP,
     created_at   TIMESTAMP DEFAULT NOW()
 );
