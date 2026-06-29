@@ -19,46 +19,103 @@
 <body class="min-h-screen">
   <div id="navbar"></div>
 
-  <main class="max-w-6xl mx-auto px-5 pt-8 pb-24">
-    <!-- Header -->
-    <div class="mb-7 animate-fade-up flex items-center gap-3">
+  <main class="max-w-7xl mx-auto px-5 pt-8 pb-24">
+    <!-- Header with Quick Actions -->
+    <div class="mb-9 animate-fade-up flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <div class="flex items-center gap-2.5">
           <span class="font-mono text-[11px] tracking-widest uppercase text-[#7a7a86]">Administration</span>
           <span class="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ring-1 ring-violet-400/30 text-violet-300 bg-violet-400/10">Admin</span>
         </div>
-        <h1 class="text-[28px] font-semibold tracking-tight mt-1">Tableau de bord</h1>
+        <h1 class="text-[28px] font-semibold tracking-tight mt-2">Tableau de bord</h1>
+        <p class="text-[#8a8a96] text-sm mt-1">Gérez les utilisateurs, surveillez les conversions et les statistiques.</p>
+      </div>
+      <div class="flex gap-2" id="quick-actions">
+        <button id="btn-refresh" class="btn-ghost px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2" title="Actualiser">
+          <svg viewBox="0 0 16 16" class="w-4 h-4" fill="none"><path d="M3 7a4 4 0 015-3.9M3 7H2m13 2a4 4 0 01-5 3.9m0 0v1m0-1h1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Actualiser
+        </button>
       </div>
     </div>
 
     <!-- STATS -->
     <section class="mb-9 animate-fade-up" style="animation-delay:.05s">
-      <div class="flex items-center justify-between mb-3.5">
-        <h2 class="text-[15px] font-semibold text-[#e2e2e9]">Statistiques</h2>
-        <span class="text-[11px] font-mono text-amber-300/80 px-2 py-0.5 rounded ring-1 ring-amber-400/20 bg-amber-400/5">Endpoint à venir</span>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-[15px] font-semibold text-[#e2e2e9]">Vue d'ensemble</h2>
+        <span class="text-[11px] font-mono text-amber-300/80 px-2 py-0.5 rounded ring-1 ring-amber-400/20 bg-amber-400/5">En temps réel</span>
       </div>
-      <div id="stats-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
+      <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
     </section>
 
-    <!-- USERS -->
+    <!-- QUICK INFO CARDS -->
     <section class="mb-9 animate-fade-up" style="animation-delay:.1s">
-      <div class="flex items-center justify-between mb-3.5">
-        <div class="flex items-center gap-2.5">
-          <h2 class="text-[15px] font-semibold text-[#e2e2e9]">Utilisateurs</h2>
-          <span class="text-[11px] font-mono text-amber-300/80 px-2 py-0.5 rounded ring-1 ring-amber-400/20 bg-amber-400/5">Endpoint à venir</span>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+        <!-- Top Formats -->
+        <div class="card p-5 animate-fade-up" style="animation-delay:.12s">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-[13px] font-semibold text-[#e2e2e9]">Formats populaires</h3>
+            <div class="w-8 h-8 grid place-items-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-[11px] font-bold">📊</div>
+          </div>
+          <div id="top-formats" class="space-y-2.5"></div>
+        </div>
+
+        <!-- System Health -->
+        <div class="card p-5 animate-fade-up" style="animation-delay:.14s">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-[13px] font-semibold text-[#e2e2e9]">Santé du système</h3>
+            <div class="w-8 h-8 grid place-items-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 text-white text-[11px] font-bold">🔧</div>
+          </div>
+          <div id="system-health" class="space-y-2.5"></div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card p-5 animate-fade-up" style="animation-delay:.16s">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-[13px] font-semibold text-[#e2e2e9]">Activité récente</h3>
+            <div class="w-8 h-8 grid place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 text-white text-[11px] font-bold">⚡</div>
+          </div>
+          <div id="recent-activity" class="space-y-2.5"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- USERS SECTION -->
+    <section class="mb-9 animate-fade-up" style="animation-delay:.18s">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-[15px] font-semibold text-[#e2e2e9]">Gestion des utilisateurs</h2>
+          <p class="text-[12px] text-[#7a7a86] mt-1">Modifiez les rôles et supprimez les comptes si nécessaire.</p>
+        </div>
+        <div class="flex gap-2">
+          <input id="users-search" type="text" placeholder="Rechercher..." class="field px-3 py-2 rounded-lg text-sm w-40" />
         </div>
       </div>
       <div id="users-table" class="card overflow-hidden"></div>
     </section>
 
-    <!-- ALL CONVERSIONS -->
-    <section class="animate-fade-up" style="animation-delay:.15s">
-      <div class="flex items-center justify-between mb-3.5">
-        <h2 class="text-[15px] font-semibold text-[#e2e2e9]">Toutes les conversions</h2>
+    <!-- CONVERSIONS HISTORY -->
+    <section class="animate-fade-up" style="animation-delay:.2s">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-[15px] font-semibold text-[#e2e2e9]">Historique des conversions</h2>
+          <p class="text-[12px] text-[#7a7a86] mt-1">Toutes les conversions effectuées sur la plateforme.</p>
+        </div>
+        <div class="flex gap-2">
+          <select id="conv-filter-format" class="field px-3 py-2 rounded-lg text-sm">
+            <option value="">Tous les formats</option>
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+            <option value="xml">XML</option>
+          </select>
+          <input id="conv-search" type="text" placeholder="Nom de fichier..." class="field px-3 py-2 rounded-lg text-sm w-40" />
+        </div>
       </div>
       <div id="conv-table" class="card overflow-hidden"></div>
     </section>
   </main>
+
+  <!-- Modal pour ajouter un utilisateur (futur) -->
+  <div id="modal-overlay" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"></div>
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>

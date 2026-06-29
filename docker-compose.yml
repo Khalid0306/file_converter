@@ -1,6 +1,7 @@
 services:
   app:
     build: ./docker/php
+    command: sh -lc "composer install --no-interaction --prefer-dist && php-fpm"
     volumes:
       - ./backend:/var/www/html
       - ./uploads:/var/www/uploads

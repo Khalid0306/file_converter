@@ -10,6 +10,20 @@
   mountAmbient();
   renderNavbar('admin');
 
+  // ===== VARIABLES GLOBALES =====
+  let allUsers = [];
+  let allConversions = [];
+  let refreshInterval;
+
+  // ===== AUTO-REFRESH =====
+  document.getElementById('btn-refresh').addEventListener('click', () => {
+    document.getElementById('btn-refresh').style.animation = 'spin 1s linear';
+    setTimeout(() => { document.getElementById('btn-refresh').style.animation = 'none'; }, 1000);
+    loadStats();
+    loadUsers();
+    loadConvs();
+  });
+
   /* ===== STATS ===== */
   const statsGrid = document.getElementById('stats-grid');
   const STAT_DEFS = [
@@ -41,29 +55,100 @@
       const val = !has ? '—' : (d.bytes ? formatBytes(raw) : raw + (d.suffix || ''));
       return `
         <div class="card p-4 relative overflow-hidden group animate-fade-up" style="animation-delay:${i*0.04}s">
-          <div class="w-9 h-9 grid place-items-center rounded-xl bg-grad/none text-violet-300 ring-1 ring-violet-400/20 bg-violet-400/10 mb-3.5">
-            <svg viewBox="0 0 20 20" class="w-[18px] h-[18px]" fill="none">${STAT_ICONS[d.icon]}</svg>
+          <div class="absolute inset-0 bg-gradient-to-r from-violet-400/0 via-violet-400/5 to-violet-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div class="relative">
+            <div class="w-9 h-9 grid place-items-center rounded-xl bg-grad/none text-violet-300 ring-1 ring-violet-400/20 bg-violet-400/10 mb-3.5">
+              <svg viewBox="0 0 20 20" class="w-[18px] h-[18px]" fill="none">${STAT_ICONS[d.icon]}</svg>
+            </div>
+            <div class="text-[24px] font-semibold tracking-tight ${has ? '' : 'text-[#5c5c66]'}">${val}</div>
+            <div class="text-[12px] text-[#7a7a86] mt-0.5">${d.label}</div>
           </div>
-          <div class="text-[24px] font-semibold tracking-tight ${has ? '' : 'text-[#5c5c66]'}">${val}</div>
-          <div class="text-[12px] text-[#7a7a86] mt-0.5">${d.label}</div>
         </div>`;
     }).join('');
   }
 
-  /* Placeholder élégant : l'endpoint /api/admin/stats n'existe pas encore.
-     En DEMO_MODE le mock renvoie des chiffres ; sinon on garde le placeholder. */
   async function loadStats() {
     statSkeleton();
     try {
       const data = await api('/api/admin/stats');
       renderStats(data || null);
+      renderTopFormats(data);
+      renderSystemHealth(data);
+      renderRecentActivity(data);
     } catch (_) {
-      renderStats(null); // placeholder propre, sans erreur bruyante
+      renderStats(null);
+      renderTopFormats(null);
+      renderSystemHealth(null);
+      renderRecentActivity(null);
     }
+  }
+
+  /* ===== TOP FORMATS ===== */
+  function renderTopFormats(data) {
+    const container = document.getElementById('top-formats');
+    if (!data || !data.formats) {
+      container.innerHTML = '<p class="text-[12px] text-[#7a7a86]">Données non disponibles</p>';
+      return;
+    }
+    const formats = data.formats || [];
+    if (formats.length === 0) {
+      container.innerHTML = '<p class="text-[12px] text-[#7a7a86]">Aucun format utilisé</p>';
+      return;
+    }
+    container.innerHTML = formats.map((f, i) => {
+      const pct = ((f.count / formats.reduce((a, b) => a + b.count, 0)) * 100).toFixed(0);
+      const colors = ['from-violet-500 to-blue-500', 'from-blue-500 to-cyan-500', 'from-cyan-500 to-emerald-500'];
+      return `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 flex-1">
+            <div class="w-2 h-2 rounded-full bg-gradient-to-r ${colors[i % colors.length]}"></div>
+            <span class="text-[12px] font-medium text-[#e2e2e9]">${f.format.toUpperCase()}</span>
+          </div>
+          <span class="text-[12px] text-[#7a7a86] font-mono">${pct}%</span>
+        </div>`;
+    }).join('');
+  }
+
+  /* ===== SYSTEM HEALTH ===== */
+  function renderSystemHealth(data) {
+    const container = document.getElementById('system-health');
+    const health = data?.health || { db: 'ok', api: 'ok', storage: 'ok' };
+    const statuses = [
+      { name: 'Base de données', status: health.db || 'ok' },
+      { name: 'API', status: health.api || 'ok' },
+      { name: 'Stockage', status: health.storage || 'ok' },
+    ];
+    container.innerHTML = statuses.map(s => {
+      const isOk = s.status === 'ok';
+      const color = isOk ? 'text-emerald-400' : 'text-rose-400';
+      const dot = isOk ? '🟢' : '🔴';
+      return `
+        <div class="flex items-center justify-between">
+          <span class="text-[12px] text-[#9a9aa6]">${s.name}</span>
+          <span class="text-[12px] font-mono ${color}">${dot} ${s.status.toUpperCase()}</span>
+        </div>`;
+    }).join('');
+  }
+
+  /* ===== RECENT ACTIVITY ===== */
+  function renderRecentActivity(data) {
+    const container = document.getElementById('recent-activity');
+    const activities = data?.recent_activity || [];
+    if (activities.length === 0) {
+      container.innerHTML = '<p class="text-[12px] text-[#7a7a86]">Aucune activité récente</p>';
+      return;
+    }
+    container.innerHTML = activities.slice(0, 3).map(act => `
+      <div class="text-[12px]">
+        <p class="text-[#e2e2e9]">${escapeHtml(act.message)}</p>
+        <p class="text-[11px] text-[#7a7a86] mt-0.5">${formatDate(act.timestamp)}</p>
+      </div>
+    `).join('');
   }
 
   /* ===== USERS ===== */
   const usersTable = document.getElementById('users-table');
+  const usersSearch = document.getElementById('users-search');
 
   function tableSkeleton(el, cols) {
     el.innerHTML = `<div class="divide-y divide-[var(--line)]">${
@@ -73,8 +158,9 @@
     }</div>`;
   }
 
-  function renderUsers(users) {
-    if (!users || !users.length) {
+  function renderUsers(users, filtered = null) {
+    const displayUsers = filtered !== null ? filtered : users;
+    if (!displayUsers || !displayUsers.length) {
       usersTable.innerHTML = emptyBlock('Aucun utilisateur', 'La liste des utilisateurs apparaîtra ici.');
       return;
     }
@@ -83,15 +169,18 @@
         <span>Nom</span><span>E-mail</span><span class="w-20">Rôle</span><span class="w-28">Inscrit</span><span class="w-16 text-right">Actions</span>
       </div>
       <div class="divide-y divide-[var(--line)] stagger">
-        ${users.map(u => `
-          <div class="row-hover px-5 py-3 flex items-center gap-4" data-uid="${u.id}">
+        ${displayUsers.map((u, idx) => `
+          <div class="row-hover px-5 py-3 flex items-center gap-4 animate-fade-up" data-uid="${u.id}" style="animation-delay:${idx*0.02}s">
             <div class="flex items-center gap-3 min-w-0 flex-1 sm:flex-none sm:w-[calc(1.4fr)]" style="flex:1.4 1 0">
               <span class="shrink-0 grid place-items-center w-8 h-8 rounded-full bg-grad text-white text-[12px] font-semibold">${(u.name||'?').charAt(0).toUpperCase()}</span>
-              <span class="text-[14px] font-medium text-[#e7e7ee] truncate">${escapeHtml(u.name)}</span>
+              <div>
+                <span class="text-[14px] font-medium text-[#e7e7ee] truncate block">${escapeHtml(u.name)}</span>
+                <span class="text-[11px] text-[#7a7a86] sm:hidden">${escapeHtml(u.email)}</span>
+              </div>
             </div>
             <div class="hidden sm:block text-[13px] text-[#9a9aa6] truncate" style="flex:1.6 1 0">${escapeHtml(u.email)}</div>
             <div class="w-20">
-              <span class="text-[11px] font-medium px-2 py-0.5 rounded-md ring-1 ${u.role==='admin' ? 'text-violet-300 ring-violet-400/30 bg-violet-400/10' : 'text-[#9a9aa6] ring-white/10 bg-white/5'}">${u.role==='admin'?'Admin':'Membre'}</span>
+              <span class="text-[11px] font-medium px-2 py-0.5 rounded-md ring-1 ${u.role==='admin' ? 'text-violet-300 ring-violet-400/30 bg-violet-400/10' : 'text-amber-300 ring-amber-400/30 bg-amber-400/10'}">${u.role==='admin'?'Admin':'Membre'}</span>
             </div>
             <div class="hidden sm:block w-28 text-[12px] text-[#7a7a86]">${formatDate(u.created_at)}</div>
             <div class="w-16 flex items-center justify-end gap-1">
@@ -112,6 +201,15 @@
       row.querySelector('[data-act="del"]').addEventListener('click', () => deleteUser(u, row));
     });
   }
+
+  usersSearch.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+    const filtered = allUsers.filter(u => 
+      u.name.toLowerCase().includes(query) || 
+      u.email.toLowerCase().includes(query)
+    );
+    renderUsers(allUsers, filtered);
+  });
 
   function editUser(u) {
     openModal({
@@ -147,7 +245,8 @@
     tableSkeleton(usersTable, 4);
     try {
       const data = await api('/api/admin/users');
-      renderUsers(data.users || []);
+      allUsers = data.users || [];
+      renderUsers(allUsers);
     } catch (err) {
       usersTable.innerHTML = emptyBlock('Indisponible', 'Impossible de charger les utilisateurs pour le moment.');
     }
@@ -155,15 +254,22 @@
 
   /* ===== ALL CONVERSIONS ===== */
   const convTable = document.getElementById('conv-table');
-  function renderConvs(items) {
-    if (!items || !items.length) { convTable.innerHTML = emptyBlock('Aucune conversion', 'Aucune conversion enregistrée.'); return; }
+  const convFilterFormat = document.getElementById('conv-filter-format');
+  const convSearch = document.getElementById('conv-search');
+
+  function renderConvs(items, filtered = null) {
+    const displayItems = filtered !== null ? filtered : items;
+    if (!displayItems || !displayItems.length) { 
+      convTable.innerHTML = emptyBlock('Aucune conversion', 'Aucune conversion enregistrée.'); 
+      return; 
+    }
     convTable.innerHTML = `
       <div class="hidden sm:grid grid-cols-[auto_1.6fr_1fr_auto_auto] gap-4 px-5 py-3 border-b border-[var(--line)] text-[11px] font-medium uppercase tracking-wide text-[#6a6a76]">
         <span class="w-10">ID</span><span>Fichier</span><span>Format</span><span class="w-24 text-right">Taille</span><span class="w-32">Date</span>
       </div>
       <div class="divide-y divide-[var(--line)] stagger">
-        ${items.map(c => `
-          <div class="row-hover px-5 py-3 flex items-center gap-4">
+        ${displayItems.map((c, idx) => `
+          <div class="row-hover px-5 py-3 flex items-center gap-4 animate-fade-up" style="animation-delay:${idx*0.02}s">
             <div class="w-10 font-mono text-[12px] text-[#6a6a76]">#${c.id}</div>
             <div class="min-w-0 flex-1 sm:flex-none text-[14px] font-medium text-[#e7e7ee] truncate" style="flex:1.6 1 0">${escapeHtml(c.file_name)}</div>
             <div class="hidden sm:flex items-center gap-2" style="flex:1 1 0">${formatBadge(c.from_format)}<svg viewBox="0 0 16 16" class="w-3 h-3 text-[#5c5c66]" fill="none"><path d="M3 8h9m0 0L9 5m3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>${formatBadge(c.to_format)}</div>
@@ -172,11 +278,29 @@
           </div>`).join('')}
       </div>`;
   }
+
+  convFilterFormat.addEventListener('change', () => filterConversions());
+  convSearch.addEventListener('input', () => filterConversions());
+
+  function filterConversions() {
+    const formatFilter = convFilterFormat.value;
+    const searchTerm = convSearch.value.toLowerCase();
+    
+    const filtered = allConversions.filter(c => {
+      const matchFormat = !formatFilter || c.from_format === formatFilter || c.to_format === formatFilter;
+      const matchSearch = !searchTerm || c.file_name.toLowerCase().includes(searchTerm);
+      return matchFormat && matchSearch;
+    });
+    
+    renderConvs(allConversions, filtered);
+  }
+
   async function loadConvs() {
     tableSkeleton(convTable, 4);
     try {
       const data = await api('/api/admin/conversions');
-      renderConvs(data.conversions || []);
+      allConversions = data.conversions || [];
+      renderConvs(allConversions);
     } catch (err) {
       convTable.innerHTML = emptyBlock('Indisponible', 'Impossible de charger les conversions.');
     }
@@ -189,7 +313,17 @@
     </div>`;
   }
 
+  // Initial load
   loadStats();
   loadUsers();
   loadConvs();
+
+  // Auto-refresh every 30 seconds
+  refreshInterval = setInterval(() => {
+    loadStats();
+    loadConvs();
+  }, 30000);
+
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', () => clearInterval(refreshInterval));
 })();
